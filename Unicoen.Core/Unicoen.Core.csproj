@@ -83,22 +83,24 @@
     <CodeContractsAnalysisWarningLevel>0</CodeContractsAnalysisWarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Paraiba">
-      <HintPath>..\lib\Paraiba.dll</HintPath>
+    <Reference Include="Paraiba, Version=1.0.0.10, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Paraiba.1.0.0.10\lib\net40\Paraiba.dll</HintPath>
     </Reference>
-    <Reference Include="Paraiba.Experiment">
-      <HintPath>..\lib\Paraiba.Experiment.dll</HintPath>
+    <Reference Include="Paraiba.Experiment, Version=1.0.0.11, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Paraiba.Experiment.1.0.0.11\lib\net40\Paraiba.Experiment.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeGenerators\JavaLikeCodeFactoryVisitor.Types.cs" />
+    <Compile Include="CodePosition.cs" />
     <Compile Include="Extensions\ModelSweeperGenericsForElement.cs" />
     <Compile Include="Extensions\ModelSweeperGenerics.cs" />
     <Compile Include="Extensions\ModelExtensions.cs" />
@@ -228,8 +230,8 @@
     <Compile Include="CodeGenerators\UnifiedCodeGenerator.cs" />
     <Compile Include="Processor\ExplicitDefaultUnifiedVisitor.cs" />
     <Compile Include="Processor\Decoration.cs" />
-    <Compile Include="ProgramGeneratos\UnifiedProgramGenerator.cs" />
-    <Compile Include="ProgramGeneratos\UnifiedProgramGeneratorHelper.cs" />
+    <Compile Include="ProgramGenerators\UnifiedProgramGenerator.cs" />
+    <Compile Include="ProgramGenerators\UnifiedProgramGeneratorHelper.cs" />
     <Compile Include="Model\Collections\UnifiedIdentifierCollection.cs" />
     <Compile Include="Model\Collections\UnifiedTypeConstrainCollection.cs" />
     <Compile Include="Model\Collections\UnifiedGenericParameterCollection.cs" />
@@ -302,6 +304,7 @@
     <Compile Include="Processor\VisitorArgument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ElementReference.cs" />
+    <Compile Include="UniGenerators.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ParserScripts\IronRubyParser\composite_sexp_processor.rb">
@@ -365,7 +368,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

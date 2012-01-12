@@ -86,29 +86,18 @@
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\..\lib\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
-    <Reference Include="Paraiba, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\Paraiba.dll</HintPath>
-    </Reference>
-    <Reference Include="Paraiba.Experiment, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\Paraiba.Experiment.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeGenerators\CSharpCodeGenerator.cs" />
     <Compile Include="CodeGenerators\CSharpCodeFactoryVisitor.cs" />
     <Compile Include="CSharpFactory.cs" />
     <Compile Include="ProgramGenerators\CSharpProgramGenerator.cs" />
-    <Compile Include="ProgramGenerators\NRefactoryModelVisitor.cs" />
-    <Compile Include="ProgramGenerators\NRefactoryModelVisitor.Helper.cs" />
+    <Compile Include="ProgramGenerators\NRefactoryAstVisitor.cs" />
+    <Compile Include="ProgramGenerators\NRefactoryAstVisitor.Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

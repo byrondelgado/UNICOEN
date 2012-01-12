@@ -21,7 +21,7 @@ using System.Linq;
 using NUnit.Framework;
 using Unicoen.CodeGenerators;
 using Unicoen.Processor;
-using Unicoen.ProgramGeneratos;
+using Unicoen.ProgramGenerators;
 using Unicoen.Tests;
 using Unicoen.Languages.Tests;
 
@@ -63,7 +63,7 @@ namespace Unicoen.Languages.C.Tests {
 		public override IEnumerable<TestCaseData> TestCodes {
 			get {
 				var statements = new[] {
-						"{ main(); }",
+						"{ func(); }",
 				}.Select(s => new TestCaseData(DecorateToCompile(s)));
 
 				var codes = new[] {
@@ -85,17 +85,18 @@ namespace Unicoen.Languages.C.Tests {
 			get {
 				// 必要に応じて以下の要素をコメントアウト
 				return new[] {
-						"fibonacci",
-						"fibonacci2",
-						"empty",
-						"assignment",
-						"Block1",
-						"Block2",
-						"Block3",
-						"hello",
-						"test",
-						"fact",
-						"pointer",
+						"switchNest",
+//						"fibonacci",
+//						"fibonacci2",
+//						"empty",
+//						"assignment",
+//						"Block1",
+//						"Block2",
+//						"Block3",
+//						"hello",
+//						"test",
+//						"fact",
+						//"pointer",
 				}
 						.Select(
 								s =>

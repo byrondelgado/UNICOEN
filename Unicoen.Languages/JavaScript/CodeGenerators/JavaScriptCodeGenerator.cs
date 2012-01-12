@@ -16,13 +16,19 @@
 
 #endregion
 
+using System.ComponentModel.Composition;
 using System.IO;
 using Unicoen.CodeGenerators;
 using Unicoen.Model;
 using Unicoen.Processor;
 
 namespace Unicoen.Languages.JavaScript.CodeGenerators {
+	[Export(typeof(UnifiedCodeGenerator))]
 	public class JavaScriptCodeGenerator : UnifiedCodeGenerator {
+		public override string Extension {
+			get { return ".js"; }
+		}
+
 		public override void Generate(
 				IUnifiedElement codeObject, TextWriter writer, string indentSign) {
 			codeObject.Accept(new JavaScriptCodeFactoryVisitor(writer, indentSign), new VisitorArgument());
