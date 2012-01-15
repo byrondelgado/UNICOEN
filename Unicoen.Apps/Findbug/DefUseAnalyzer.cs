@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -78,16 +79,35 @@ namespace Unicoen.Apps.Findbug {
             var defineNames = FindUses(codeObj);
             foreach (var defName in defineNames) {
                 var name = defName;
-                var elements = codeObj.Descendants<UnifiedBinaryExpression>().Where(e => name != e);
-                var variableName = (UnifiedVariableIdentifier)defName;
-                foreach (var element in elements) {
+                var elements = codeObj.DescendantsUntil(e => {
+                    bool b = name == e;
+                    Console.WriteLine(b);
+                    return b;
+                });
+                /*var variableName = (UnifiedVariableIdentifier)defName;
+                foreach (var element in (IEnumerable<UnifiedBinaryExpression>)elements) {
                     var left = element.LeftHandSide as UnifiedVariableIdentifier;
                     var right = element.RightHandSide as UnifiedNullLiteral;
                     if (left != null && left.Name.Equals(variableName.Name)) {
                         Console.WriteLine("{0} is {1}", left.Name, element.RightHandSide);
                     }
-                }
+                }*/
             }
         }
+
+        public static IEnumerable<IUnifiedElement> CreateGraph(UnifiedProgram codeObj) {
+            var children = codeObj.Descendants<UnifiedBinaryExpression>();
+            var a = Chi
+            foreach (var aaa in a) {
+                var c = aaa.Condition;
+            }
+            foreach (var child in children) {
+                if (child.RightHandSide as UnifiedNullLiteral != null) continue;
+                //var def = FindDefines(codeObj);
+                //var use = FindUses(codeObj);
+
+                yield return child;
+            }
+        } 
 	}
 }
