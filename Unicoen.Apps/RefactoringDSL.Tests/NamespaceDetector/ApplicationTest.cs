@@ -35,9 +35,13 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 			var definition = Application.FindDefinition(callNode, _model);
 			Assert.That(definition != null);
 			Assert.That(definition.Name.Name, Is.EqualTo(((UnifiedVariableIdentifier)callNode.Function).Name));
+
+			Console.WriteLine(JavaFactory.GenerateCode(callNode ));
+
+			Console.WriteLine(JavaFactory.GenerateCode(Application.FindDefinition(callNode, _model)));
 		}
 
-		[Test]
+		[Ignore]
 		public void 自分の親を探して変数の宣言部分を探す() {
 			// Expression 以下の VariableIdentifier を取り出す
 			var viList = new List<UnifiedVariableIdentifier>();
@@ -64,6 +68,7 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 
 		}
 
+		// --------------- EXPERIMENTAL! ---------------
 		[Test]
 		public void 関数が呼ばれている部分を探す() {
 			var fdNode = _model.FirstDescendant<UnifiedFunctionDefinition>();
@@ -78,6 +83,7 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 		}
 
 		// 自分の兄弟ノード（自分も含む）を取得する
+		// TODO FindUtil に移動
 		public static IEnumerable<IUnifiedElement> GetBrotherNode(UnifiedElement node) {
 			return node.FirstAncestor<IUnifiedElement>().Descendants();
 		}
