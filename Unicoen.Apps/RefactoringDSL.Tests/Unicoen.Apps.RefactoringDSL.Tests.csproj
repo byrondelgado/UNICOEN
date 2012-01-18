@@ -42,12 +42,17 @@
     <Compile Include="EncapsulateCollectionHelperTest.cs" />
     <Compile Include="EncapsulateCollectionTest.cs" />
     <Compile Include="EncapsulateFieldTest.cs" />
+    <Compile Include="EncapsulateFieldTestForCS.cs" />
     <Compile Include="NamespaceDetector\ApplicationTest.cs" />
     <Compile Include="NamespaceDetector\NamespaceDetectorTest.cs" />
     <Compile Include="FindUtilTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Unicoen.Languages\CSharp\Unicoen.Languages.CSharp.csproj">
+      <Project>{2B706EC6-51C7-463F-962B-375A5036E40B}</Project>
+      <Name>Unicoen.Languages.CSharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RefactoringDSL\Unicoen.Apps.RefactoringDSL.csproj">
       <Project>{B47D51ED-5D1F-45E2-B88D-452332AD58EA}</Project>
       <Name>Unicoen.Apps.RefactoringDSL</Name>

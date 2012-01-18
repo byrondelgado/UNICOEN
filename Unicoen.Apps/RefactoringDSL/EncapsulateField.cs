@@ -19,7 +19,12 @@ namespace Unicoen.Apps.RefactoringDSL{
 		public UnifiedProgram Refactor(String className) {
 			// 一応コピー
 			var model = Program.DeepCopy();
-			var targetClass = EncapsulateFieldHelper.FindByClassName(model, "Foo").First();
+			var targetClasses = EncapsulateFieldHelper.FindByClassName(model, className);
+			if (targetClasses.Count() <= 0) {
+				// クラスがなかったら，なにもしないで返す
+				return model;
+			}
+			var targetClass = targetClasses.First();
 			var publicVariables = EncapsulateFieldHelper.FindPublicFields(targetClass);
 
 			var getters = new List<UnifiedFunctionDefinition>();
@@ -37,7 +42,6 @@ namespace Unicoen.Apps.RefactoringDSL{
 
 			var list = targetClass.Body.DeepCopy();
 			// 元の要素群とアクセッサを結合
-			// var list = new List<IUnifiedExpression>();
 			foreach (var getter in getters) {
 				list.Add(getter);
 			}
@@ -45,9 +49,6 @@ namespace Unicoen.Apps.RefactoringDSL{
 				list.Add(setter);
 			}
 			
-			// var newBody = UnifiedBlock.Create(list);
-			// var newBody = list;
-
 			targetClass.Body = list;
 
 			return model;
