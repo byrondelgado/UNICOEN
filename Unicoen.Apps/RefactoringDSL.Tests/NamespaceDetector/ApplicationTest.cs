@@ -53,8 +53,7 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 			foreach (var node in target.FirstAncestor<UnifiedBlock>().Descendants()) {
 				if (node is UnifiedVariableDefinition) {
 					var vd = (UnifiedVariableDefinition)node;
-					if(vd.Name.Name == target.Name)
-					{
+					if (vd.Name.Name == target.Name) {
 						found = vd;
 						break;
 					}
