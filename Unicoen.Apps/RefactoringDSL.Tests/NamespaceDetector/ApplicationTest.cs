@@ -37,6 +37,7 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 			Assert.That(definition.Name.Name, Is.EqualTo(((UnifiedVariableIdentifier)callNode.Function).Name));
 		}
 
+		// 変数の宣言は，同一ブロック内にないといけないと判断した
 		[Test]
 		public void 自分の親を探して変数の宣言部分を探す() {
 			// Expression 以下の VariableIdentifier を取り出す
@@ -46,25 +47,74 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 					viList.Add(uvi);
 				}
 			}
-			foreach (var unifiedVariableIdentifiers in _model.Descendants<UnifiedUnaryExpression>().Select(e => e.Descendants<UnifiedVariableIdentifier>())) {
-				foreach (var uvi in unifiedVariableIdentifiers) {
-					viList.Add(uvi);
-				}
-			}
-			foreach (var unifiedVariableIdentifiers in _model.Descendants<UnifiedTernaryExpression>().Select(e => e.Descendants<UnifiedVariableIdentifier>())) {
-				foreach (var uvi in unifiedVariableIdentifiers) {
-					viList.Add(uvi);
+
+			var target = viList.First();
+			UnifiedVariableDefinition found = null;
+			foreach (var node in target.FirstAncestor<UnifiedBlock>().Descendants()) {
+				if (node is UnifiedVariableDefinition) {
+					var vd = (UnifiedVariableDefinition)node;
+					if(vd.Name.Name == target.Name)
+					{
+						found = vd;
+						break;
+					}
 				}
 			}
 
-			Console.WriteLine(viList.Count);
-			foreach (var vi in viList) {
-				Console.WriteLine(vi);
+			if (found == null) {
+				Console.WriteLine("Element not found");
+			} else {
+				Console.WriteLine(found.ToXml());
 			}
+
+			Console.WriteLine("terminated");
 
 		}
 
 		[Test]
+		public void TestForFindDefinition()
+		{
+			var ids = _model.Descendants<UnifiedVariableIdentifier>();
+			var id = ids.First();
+
+			var def = FindDefinition(id, _model);
+			if(def == null)
+			{
+				Console.WriteLine("aaaa");
+			}
+			Console.WriteLine(def);
+		}
+
+		public static UnifiedVariableDefinition FindDefinition(UnifiedVariableIdentifier identifier, UnifiedElement topNode)
+		{
+			UnifiedVariableDefinition found = null;
+			foreach (var node in identifier.FirstAncestor<UnifiedBlock>().Descendants()) {
+				if (node is UnifiedVariableDefinition) {
+					var vd = (UnifiedVariableDefinition)node;
+					if (vd.Name.Name == identifier.Name) {
+						return vd;
+					}
+				}
+			}
+
+			return null;
+		}
+
+
+
+
+		public static IEnumerable<UnifiedElement> YieldParents(UnifiedElement node)
+		{
+			var n = node;
+			while(n != null)
+			{
+				yield return n;
+				n = (UnifiedElement)n.Parent;
+			}
+		}
+
+			// ------------------------------------------ EXPERIMENTAL ------------------------------------------
+		[Ignore]
 		public void 関数が呼ばれている部分を探す() {
 			var fdNode = _model.FirstDescendant<UnifiedFunctionDefinition>();
 			var brothers = GetBrotherNode(fdNode);
@@ -76,6 +126,7 @@ namespace Unicoen.Apps.RefactoringDSL.Tests.NamespaceDetector {
 
 
 		}
+
 
 		// 自分の兄弟ノード（自分も含む）を取得する
 		public static IEnumerable<IUnifiedElement> GetBrotherNode(UnifiedElement node) {

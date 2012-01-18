@@ -16,6 +16,9 @@ class Cls{
 	}
 	
 	public void method2(){
+		int a;
+		a = 10;
+		
 		for(int i = 0; i < N; i++){
 			int n = 0;
 			method(n);
