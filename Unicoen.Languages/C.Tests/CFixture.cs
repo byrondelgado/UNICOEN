@@ -85,7 +85,9 @@ namespace Unicoen.Languages.C.Tests {
 			get {
 				// 必要に応じて以下の要素をコメントアウト
 				return new[] {
-						"switchNest",
+						//"LineDriveController",
+						"ActionController",
+//						"switchNest",
 //						"fibonacci",
 //						"fibonacci2",
 //						"empty",

@@ -82,6 +82,12 @@ namespace Unicoen.Languages.C.CodeGenerators {
 			return false;
 		}
 
+		// 修飾子(UnifiedModifier)
+		public override bool Visit(UnifiedModifier element, VisitorArgument arg) {
+			Writer.Write(element.Name);
+			return false;
+		}
+
 		# endregion
 
 		# region operator

@@ -100,7 +100,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			if (first.Name() == "declaration_specifiers") { 
 				var modifiersAndType = CreateDeclarationSpecifiers(first);
 				modifiers = modifiersAndType.Item1;
-				type = modifiersAndType.Item2;
+				type = (UnifiedType)modifiersAndType.Item2;
 			}
 
 			var declarator = CreateDeclarator(node.Element("declarator"));
@@ -152,7 +152,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 				if(initDeclaratorList != null) {
 					variables = UnifiedVariableDefinitionList.Create(
 						CreateInitDeclaratorList(initDeclaratorList).
-						Select(e => UnifiedVariableDefinition.Create(null, modifiers, type, e.Item1, e.Item2)));
+						Select(e => UnifiedVariableDefinition.Create(null, modifiers.DeepCopy(), (UnifiedType)type.DeepCopy(), e.Item1.DeepCopy(), e.Item2.DeepCopy())));
 				}
 				return variables;
 
@@ -162,7 +162,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			}
 		}
 
-		public static Tuple<UnifiedModifierCollection, UnifiedType> 
+		public static Tuple<UnifiedModifierCollection, IUnifiedExpression> 
 			CreateDeclarationSpecifiers(XElement node) {
 			Contract.Requires(node != null);
 			Contract.Requires(node.Name() == "declaration_specifiers");
@@ -172,7 +172,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			 *       |   type_qualifier      )+
 			 */
 			var modifiers = UnifiedModifierCollection.Create();
-			IList<UnifiedType> types = new List<UnifiedType>();
+			IList<IUnifiedExpression> types = new List<IUnifiedExpression>();
 			
 			foreach (var e in node.Elements()) {
 				switch (e.Name()) {
@@ -194,7 +194,10 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			if(modifiers.IsEmpty())
 				modifiers = null;
 
-			UnifiedType type;
+			if(types[0].GetType() == typeof(UnifiedEnumDefinition))
+				return Tuple.Create(modifiers, types[0]);
+
+			IUnifiedExpression type;
 			if (types.Count == 1) {
 				type = types[0];
 			} else {
@@ -202,11 +205,13 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 				var prefix = "";
 				// TODO unsigned int, long long int などは そのまま１つの型で表されるのか？
 				foreach (var t in types) {
-					s += prefix + ((UnifiedVariableIdentifier)t.BasicTypeName).Name;
+					var tmp = t as UnifiedType;
+					if(tmp == null)
+						throw new InvalidOperationException();
+					s += prefix + ((UnifiedVariableIdentifier)tmp.BasicTypeName).Name;
 					prefix = " ";
 				}
 				type = UnifiedType.Create(UnifiedVariableIdentifier.Create(s));
-
 			}
 			return Tuple.Create(modifiers, type);
 		}
@@ -246,7 +251,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			return UnifiedModifier.Create(node.FirstElement().Value);
 		}
 
-		public static UnifiedType CreateTypeSpecifier(XElement node) {
+		public static IUnifiedExpression CreateTypeSpecifier(XElement node) {
 			Contract.Requires(node != null);
 			Contract.Requires(node.Name() == "type_specifier");
 			/*	type_specifier
@@ -268,7 +273,10 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			case "struct_or_union_specifier":
 				return CreateStructOrUnionSpecifier(first);
 			case "enum_specifier":
-				return (UnifiedType)CreateEnumSpecifier(first); // TODO enum定義時の場合を考慮していない
+				var e = CreateEnumSpecifier(first);
+				if(e.GetType() == typeof(UnifiedEnumDefinition))
+					return (UnifiedEnumDefinition)e;
+				return (UnifiedType)e;
 			case "type_id":
 				return CreateTypeId(first);
 			default:
@@ -381,7 +389,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 					modifiers.Add(CreateTypeQualifier(e));
 					break;
 				case "type_specifier":
-					types.Add(CreateTypeSpecifier(e));
+					types.Add((UnifiedType)CreateTypeSpecifier(e));
 					break;
 				}
 			}
@@ -478,9 +486,8 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 		
 			var identifier = UnifiedIdentifier.CreateVariable(node.NthElement(0).Value);
 			IUnifiedExpression value = null;
-			var expression = node.FirstElement("constant_expression");
-			if(expression != null)
-				value = CreateConstantExpression(expression);
+			if(node.Elements("constant_expression").Count() > 0)
+				value = CreateConstantExpression(node.FirstElement("constant_expression"));
 			return UnifiedVariableDefinition.Create(null, null, null, identifier, value);
 		}
 
@@ -564,7 +571,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			// 空のパラメータリストを生成する
 			var parameters = UnifiedParameterCollection.Create();
 			// ()の場合
-			if (node.FirstElement().Value.Equals("(") && node.LastElement().Value.Equals(")")) {
+			if (node.FirstElement().Value == "(" && node.LastElement().Value == ")") {
 				if (node.Element("parameter_type_list") != null) {
 					parameters = CreateParameterTypeList(node.Element("parameter_type_list"));
 				} else if (node.Element("identifier_list") != null) {
@@ -643,6 +650,9 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			var type = modifiersAndType.Item2;
 
 			var declarators = node.Elements("declarator");
+			if(declarators.Count() == 0)
+				return UnifiedParameter.Create(null, modifiers, (UnifiedType)type);
+
 			var declarator = CreateDeclarator(node.FirstElement("declarator"));
 
 			// abstract_declaratorはおそらく[]など=> よって、最初に現れることはないはず( // TODO 未検証)
@@ -653,7 +663,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			} 
 			// TODO 実際のところ、そこまで理解しきれていない
 			else if (declarators.Count() == 1) { // 多分declarator自体は１つしか現れないはず( // TODO 未検証)
-				return UnifiedParameter.Create(null, modifiers, type, declarator.Item1.ToCollection());
+				return UnifiedParameter.Create(null, modifiers, (UnifiedType) type, declarator.Item1.ToCollection());
 			} 
 			else if (node.Element("declarator") != null) {
 				parameters = declarator.Item2;
@@ -662,10 +672,10 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 					// この場合はパラメータが関数ポインタ
 					var returnType = type;
 					type = UnifiedType.Create(
-							UnifiedFunctionDefinition.Create(null, modifiers, returnType,null, null, parameters));
+							UnifiedFunctionDefinition.Create(null, modifiers, (UnifiedType)returnType,null, null, parameters));
 					modifiers = null;
 				}
-				return UnifiedParameter.Create(null, modifiers, type, name.ToCollection(), null);
+				return UnifiedParameter.Create(null, modifiers, (UnifiedType) type, name.ToCollection(), null);
 			}
 			throw new InvalidOperationException();
 		}

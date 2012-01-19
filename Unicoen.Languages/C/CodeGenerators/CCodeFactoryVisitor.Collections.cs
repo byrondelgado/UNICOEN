@@ -39,6 +39,12 @@ namespace Unicoen.Languages.C.CodeGenerators {
 			return false;
 		}
 
+		// 修飾子(UnifiedModifierCollection)
+		public override bool Visit(UnifiedModifierCollection element, VisitorArgument arg) {
+			VisitCollection(element, arg.Set(Paren));
+			return false;
+		}
+
 		// パラメータ名(UnifiedIdentifierCollection)
 		// Python向けにパラメータは複数の識別子を保持できるようになっているが、
 		// C言語ではUnifiedIdentifierCollectionが持つ要素は1つのみである
@@ -94,6 +100,7 @@ namespace Unicoen.Languages.C.CodeGenerators {
 					commonTypeStr = GetString(e.Type, arg);
 					Writer.Write(commonTypeStr + " ");
 					e.Name.TryAccept(this, arg);
+					e.Arguments.TryAccept(this, arg);
 					isFirst = false;
 				} else {
 					Writer.Write(", ");
