@@ -234,6 +234,7 @@ namespace Unicoen.Languages.C.ProgramGenerators {
 			var declarator = CreateDeclarator(node.Element("declarator"));
 			var initializer = node.Element("initializer") != null ? CreateInitializer(node.Element("initializer")) : null;
 
+			// TODO ここでパラメータに関する情報が消えてしまっている。
 			return Tuple.Create(declarator.Item1, initializer);
 		}
 
