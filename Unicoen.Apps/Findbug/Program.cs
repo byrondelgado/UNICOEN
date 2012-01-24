@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
+using Code2Xml.Languages.Java.CodeToXmls;
 using Unicoen.Languages.Java.ProgramGenerators;
+using Unicoen.Languages.CSharp.ProgramGenerators;
+using Unicoen.Languages.Python2.ProgramGenerators;
 using Unicoen.Model;
 using Unicoen.Tests;
 using System.Collections.Generic;
@@ -15,106 +18,62 @@ namespace Unicoen.Apps.Findbug {
                 }
             }
         }
-
-        public static IEnumerable<IUnifiedElement> FindDefines(UnifiedProgram codeObj) {
-            var binaryExpressions = codeObj.Descendants<UnifiedBinaryExpression>();
-
-            foreach (var be in binaryExpressions) {
-                if (be.Operator.Kind == UnifiedBinaryOperatorKind.Assign) {
-                    var left = be.LeftHandSide as UnifiedVariableIdentifier;
-                    if (left != null) {
-                        Console.WriteLine("Identifier :\n{0}", left);
-                    }
-                    yield return left;
-                }
-            }
-        }
-
-        public static IEnumerable<IUnifiedElement> FindUses(UnifiedProgram codeObj) {
-            var binaryExpressions = codeObj.Descendants<UnifiedBinaryExpression>();
-            foreach (var be in binaryExpressions) {
-                if (be.Operator.Kind == UnifiedBinaryOperatorKind.Assign) {
-                    var right = be.RightHandSide as UnifiedVariableIdentifier;
-                    if (right != null) {
-                        var rightName = right.Name;
-                        Console.WriteLine("{0} is used", rightName);
-                        Console.WriteLine(right);
-                        yield return right;
-                    }
-                }
-            }
-        }
-
-        public static IEnumerable<string> FindNullDefines(UnifiedProgram codeObj) {
-            var binaryExpressions = codeObj.Descendants<UnifiedBinaryExpression>();
-            var definition = codeObj.Descendants<UnifiedVariableDefinition>();
-            var nameList = new LinkedList<string>();
-            foreach (var def in definition) {
-                var nullDefinition = def.InitialValue as UnifiedNullLiteral;
-                if (nullDefinition != null) {
-                    Console.WriteLine("{0} defines null", def.Name.Name);
-                    Console.WriteLine(nullDefinition);
-                    nameList.AddLast(def.Name.Name);
-                }
-            }
-
-            foreach (var be in binaryExpressions) {
-                if (be.Operator.Kind == UnifiedBinaryOperatorKind.Assign) {
-                    var right = be.RightHandSide as UnifiedNullLiteral;
-                    var nullId = be.LeftHandSide as UnifiedVariableIdentifier;
-                    if (right != null && nullId != null) {
-                        Console.WriteLine("{0} will be null", nullId.Name);
-                        Console.WriteLine(nullId);
-                        nameList.AddLast(nullId.Name);
-                    }
-                }
-            }
-            return nameList;
-        }
-
-        public static void FindUsesDefine(UnifiedProgram codeObj) {
-            var defineNames = FindUses(codeObj);
-            var name = defineNames.First();
-            var elements = codeObj.DescendantsUntil(e => {
-                bool b = name == e;
-                Console.WriteLine(b);
-                return b;
-            });
-            /*foreach (var defName in defineNames) {
-                var name = defName;
-               */ 
-                foreach (var element in elements) {
-                    Console.WriteLine(element);
-                }
-            return;
-            /*var variableName = (UnifiedVariableIdentifier)defName;
-                foreach (var element in (IEnumerable<UnifiedBinaryExpression>)elements) {
-                    var left = element.LeftHandSide as UnifiedVariableIdentifier;
-                    var right = element.RightHandSide as UnifiedNullLiteral;
-                    if (left != null && left.Name.Equals(variableName.Name)) {
-                        Console.WriteLine("{0} is {1}", left.Name, element.RightHandSide);
-                    }
-                }*/
-            //}
-        }
         
         static void Main(string[] args) {
             try {
-                var inputPath = FixtureUtil.GetInputPath("Java", "BugPatterns", "NP_NULL_ON_SOME_PATH.java");
-                var codeObj = new JavaProgramGenerator().GenerateFromFile(inputPath);
-                var a = FindDefines(codeObj);
-                a.Count();
-                var b = FindUses(codeObj);
-                b.Count();
-                var c = FindNullDefines(codeObj);
-                foreach (var ccc in c) {
-                    Console.WriteLine(ccc);
-                }
+                var inputPath = FixtureUtil.GetInputPath("Java", "BugPatterns", "GraphSample.java");
+                var javaCodeObj = new JavaProgramGenerator().GenerateFromFile(inputPath);
+                var bodyJ = javaCodeObj.Body;
 
-                var e = DefUseAnalyzer.CreateGraph(codeObj);
+                var inputPathP = FixtureUtil.GetInputPath("Python2", "BugPatterns", "NP_SOMEPATH.py");
+                var pythonCodeObj = new Python2ProgramGenerator().GenerateFromFile(inputPathP);
+                var bodyP = pythonCodeObj.Body;
+
+                var inputPathCs = FixtureUtil.GetInputPath("CSharp", "BugPatterns", "NP_SOMEPATH.cs");
+                var csharpCodeObj = new CSharpProgramGenerator().GenerateFromFile(inputPathCs);
+                var bodyCs = csharpCodeObj.Body;
+
+                var blocks = javaCodeObj.Descendants<UnifiedBlock>();
+                CreateGraph.Graph(blocks);
+
+                //多言語対応可能かの実験
+                /*var a = DefUseAnalyzer.FindDefines(bodyJ);
+                foreach (var aaa in a) {
+                    Console.WriteLine("def: \n{0}", aaa);
+                }
+                var b = DefUseAnalyzer.FindUses(bodyJ);
+                foreach (var bbb in b) {
+                    Console.WriteLine("use: \n{0}", bbb);
+                }
+                var c = DefUseAnalyzer.FindNullDefines(bodyJ);
+                Console.WriteLine("END.");
+
+                var ap = DefUseAnalyzer.FindDefines(bodyP);
+                foreach (var app in ap) {
+                    Console.WriteLine("def: \n{0}", app);
+                }
+                var bp = DefUseAnalyzer.FindUses(bodyP);
+                foreach (var bpp in bp) {
+                    Console.WriteLine("use: \n{0}", bpp);
+                }
+                var cp = DefUseAnalyzer.FindNullDefines(bodyP);
+                Console.WriteLine("END.");
+
+                var acs = DefUseAnalyzer.FindDefines(bodyCs);
+                foreach (var acss in acs) {
+                    Console.WriteLine("def: \n{0}", acss);
+                }
+                var bcs = DefUseAnalyzer.FindUses(bodyCs);
+                foreach (var bcss in bcs) {
+                    Console.WriteLine("use: \n{0}", bcss);
+                }
+                var ccs = DefUseAnalyzer.FindNullDefines(bodyCs);
+                Console.WriteLine("END.");
+                */
+                /*var e = DefUseAnalyzer.CreateGraph(codeObject);
                 foreach (var eee in e) {
                     Console.WriteLine(eee);
-                }
+                }*/
 
                 //FindUsesDefine(codeObj);
 
