@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using Unicoen.Model;
 
 namespace Unicoen.Apps.Findbug {
+    //ToDo:すっきりまとめる
     public class DefUseAnalyzer {
         public static IEnumerable<IUnifiedElement> FindDefines(
                 UnifiedBlock codeObj) {
@@ -31,8 +32,6 @@ namespace Unicoen.Apps.Findbug {
                 if (be.Operator.Kind == UnifiedBinaryOperatorKind.Assign) {
                     var right = be.RightHandSide as UnifiedVariableIdentifier;
                     if (right != null) {
-                        //var rightName = right.Name;
-                        //Console.WriteLine("{0} is used", rightName);
                         yield return right;
                     }
                     var right2 = be.RightHandSide as UnifiedLiteral;
@@ -89,6 +88,31 @@ namespace Unicoen.Apps.Findbug {
                         Console.WriteLine("{0} is {1}", left.Name, element.RightHandSide);
                     }
                 }*/
+            }
+        }
+
+        public static void FindNodeDefines(IUnifiedElement binaryExpression) {
+            var be = binaryExpression as UnifiedBinaryExpression;
+            if (be != null) {
+                if (be.Operator.Kind == UnifiedBinaryOperatorKind.Assign) {
+                    var identifier = be.LeftHandSide as UnifiedVariableIdentifier;
+                    if (identifier != null) {
+                        Console.WriteLine("Def: \n{0}", identifier);
+                    }
+                    var usedId = be.RightHandSide as UnifiedVariableIdentifier;
+                    if (usedId != null) {
+                        Console.WriteLine("Use: \n{0}", usedId);
+                    }
+                    var literal = be.RightHandSide as UnifiedLiteral;
+                    if (literal != null) {
+                        Console.WriteLine("Use: \n{0}", literal);
+                    }
+                }
+            }
+            var definition = binaryExpression as UnifiedVariableDefinitionList;
+            if (definition != null) {
+                Console.WriteLine("Def: \n{0}", definition.First().Name);
+                Console.WriteLine("Use: \n{0}", definition.First().InitialValue);
             }
         }
     }

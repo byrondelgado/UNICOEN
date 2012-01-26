@@ -7,118 +7,159 @@ using Unicoen.Model;
 namespace Unicoen.Apps.Findbug {
     class CreateGraph {
         public static void Graph(IEnumerable<UnifiedBlock> blocks) {
-            /*
-             * コメントアウトの部分は、以前に作成した部分です。
-             * エッジごとにそれぞれ違うリストを用意しています。
-             * そうでない部分は、同じリストに全部入れているものです。
-             */
             
-            /*var head = new Head();
-            var edge1 = new Edge();
-            var edge2 = new Edge();
-            var edge3 = new Edge();
-            var edge4 = new Edge();
-            var edge5 = new Edge();
-            var edge6 = new Edge();
+            var head = new Node(null);
+            head.NextNodes.Add(new Node(head));
+            var node = head.NextNodes.First();
 
-            head.FirstHead.NextEdges.Add(edge1);
-            edge1.NextEdges.Add(edge2);
-            edge2.NextEdges.Add(edge3);
-            edge3.NextEdges.Add(edge4);
-            edge4.NextEdges.Add(edge5);
-            edge5.NextEdges.Add(edge6);
-            edge6.NextEdges.Add(null);
+            node = DataGraph(node, blocks, null);
 
+            node.NextNodes.Add(null);
 
-            var next = head.FirstHead.NextEdges.First();*/
+            node = head.NextNodes.First();
+            Display(node);
+        }
 
-            var edge = new Edge();
-            var next = 1;
-            
-            edge.MainList.Add(new Expression(null, next));
-
-            foreach (var block in blocks) {
-                var children = block.Elements();
-                foreach (var child in children) {
-                    var childBin = child as UnifiedBinaryExpression;
-                    if (childBin != null) {
-                        next++;
-                        edge.MainList.Add(new Expression(childBin, next));
-                        //next.MainList.Add(childBin);
-                        //next = next.NextEdges.Last();
+        public static void Display(Node node) {
+            while (node.NextNodes.First() != null) {
+                //Console.WriteLine(node.NodeStatement);
+                DefUseAnalyzer.FindNodeDefines(node.NodeStatement);
+                if (node.NextNodes.Count() > 1) {
+                    Node last = null;
+                    for(var i = 0; i < node.NextNodes.Count(); i++) {
+                        last = BranchDisplay(node.NextNodes[i]);
                     }
-                    var childDef = child as UnifiedVariableDefinitionList;
-                    if (childDef != null) {
-                        next++;
-                        edge.MainList.Add(new Expression(childDef, next));
-                        //next.MainList.Add(childDef);
-                        //next = next.NextEdges.Last();
-                    }
+                    node = last;
+                }
+                else {
+                    node = node.NextNodes[0];
                 }
             }
-            //next.NextEdges.Add(null);
-            var array = edge.MainList.ToArray();
-
-            //next = head.FirstHead.NextEdges.Last();
-            var i = array[0].Next;
-            while (i < array.Count()) {
-                //Console.WriteLine(next.MainList.First());
-                Console.WriteLine(array[i].Statement);
-                Console.WriteLine(array[i].Next);
-                FindDefinesB(array[i].Statement);
-                //next = next.NextEdges.First();
-                i++;
-            }
         }
 
-        public static void FindDefinesB(IUnifiedElement binaryExpression) {
-            var be = binaryExpression as UnifiedBinaryExpression;
-            if (be != null) {
-                if (be.Operator.Kind == UnifiedBinaryOperatorKind.Assign) {
-                    var left = be.LeftHandSide as UnifiedVariableIdentifier;
-                    if (left != null) {
-                        Console.WriteLine("Def: \n{0}", left);
+        public static Node BranchDisplay(Node node) {
+            while (node.EndOfBranch != true) {
+                //Console.WriteLine(node.NodeStatement);
+                DefUseAnalyzer.FindNodeDefines(node.NodeStatement);
+                if (node.NextNodes.Count() > 1) {
+                    var last = node;
+                    for (var i = 0; i < node.NextNodes.Count(); i++) {
+                        last = BranchDisplay(node.NextNodes[i]);
                     }
-                    var right = be.RightHandSide as UnifiedVariableIdentifier;
-                    if (right != null) {
-                        Console.WriteLine("Use: \n{0}", right);
-                    }
-                    var right2 = be.RightHandSide as UnifiedLiteral;
-                    if (right2 != null) {
-                        Console.WriteLine("Use: \n{0}", right2);
-                    }
+                    node = last;
+                }
+                else {
+                    node = node.NextNodes[0];
                 }
             }
-            var beDef = binaryExpression as UnifiedVariableDefinitionList;
-            if (beDef != null) {
-                Console.WriteLine("Def: \n{0}", beDef.First().Name);
-                Console.WriteLine("Use: \n{0}", beDef.First().InitialValue);
+            return node;
+        }
+
+        public static Node DataGraph(Node node, IEnumerable<UnifiedBlock> blocks, UnifiedBlock oneBlock) {
+            if(blocks == null && oneBlock != null) {
+                node = BlockAnalyzer(node, oneBlock);
             }
+            else if(blocks != null){
+                foreach (var block in blocks) {
+                    node = BlockAnalyzer(node, block);
+                }
+            }
+            return node;
+        }
+
+        public static Node BlockAnalyzer(Node node, UnifiedBlock block) {
+            var children = block.Elements();
+            foreach (var child in children) {
+                var childDef = child as UnifiedVariableDefinitionList;
+                if (childDef != null) {
+                    node.NodeStatement = childDef;
+                    node.NextNodes.Add(new Node(node));
+                    node = node.NextNodes.First();
+                }
+
+                var childBin = child as UnifiedBinaryExpression;
+                if (childBin != null) {
+                    node.NodeStatement = childBin;
+                    node.NextNodes.Add(new Node(node));
+                    node = node.NextNodes.First();
+                }
+
+                var childUnary = child as UnifiedUnaryExpression;
+                if (childUnary != null) {
+                    node.NodeStatement = childUnary;
+                    node.NextNodes.Add(new Node(node));
+                    node = node.NextNodes.First();
+                }
+
+                var childIf = child as UnifiedIf;
+                if (childIf != null) {
+                    node.NodeStatement = childIf.Condition;
+                    node.NextNodes.Add(new Node(node));
+                    var ifBodyNode = DataGraph(
+                            node.NextNodes.First(), null, childIf.Body);
+                    if (childIf.ElseBody != null) {
+                        node.NextNodes.Add(new Node(node));
+                        var elseBodyNodes = DataGraph(
+                                node.NextNodes.Last(), null, childIf.ElseBody);
+                        elseBodyNodes.Previous.NextNodes.Clear();
+                        elseBodyNodes.Previous.NextNodes.Add(ifBodyNode);
+                        node = ifBodyNode;
+                        ifBodyNode.EndOfBranch = true;
+                    } else {
+                        node.NextNodes.Insert(0, ifBodyNode);
+                        node = node.NextNodes.First();
+                    }
+                }
+
+                var childWhile = child as UnifiedWhile;
+                if (childWhile != null) {
+                    node.NodeStatement = childWhile.Condition;
+                    node.NextNodes.Add(new Node(node));
+                    var whileBodyNode = DataGraph(
+                            node.NextNodes.First(), null, childWhile.Body);
+                    node.NextNodes.Insert(0, whileBodyNode);
+                    node = node.NextNodes.First();
+                    //whileBodyNode.EndOfBranch = true;
+                }
+
+                var childFor = child as UnifiedFor;
+                if (childFor != null) {
+                    node.NodeStatement = childFor.Initializer;
+                    node.NextNodes.Add(new Node(node));
+                    node = node.NextNodes.First();
+                    node.NodeStatement = childFor.Condition;
+                    node.NextNodes.Add(new Node(node));
+                    var forBodyNode = DataGraph(
+                            node.NextNodes.First(), null, childFor.Body);
+                    node.NextNodes.Insert(0, forBodyNode);
+                    node = node.NextNodes.First();
+                    //forBodyNode.EndOfBranch = true;
+                }
+
+                var childReturn = child as UnifiedReturn;
+                if (childReturn != null) {
+                    node.NodeStatement = childReturn.Value;
+                    node.NextNodes.Add(new Node(node));
+                    node = node.NextNodes.First();
+                }
+            }
+            return node;
         }
     }
 
-    class Head {
-        public Edge FirstHead = new Edge();
-    }
+    class Node {
+        public IList<Node> NextNodes = new List<Node>();
+        public IUnifiedElement NodeStatement;
 
-    class Edge {
-        public IList<Edge> NextEdges = new List<Edge>();
-        public List<Expression> MainList = new List<Expression>();
-    }
+        public bool EndOfBranch;
 
-    class Expression {
-        private readonly IUnifiedElement element;
-        private readonly int number;
-        public Expression(IUnifiedElement element, int number) {
-            this.element = element;
-            this.number = number;
+        private readonly Node _previous;
+        public Node(Node previous) {
+            _previous = previous;
         }
 
-        public IUnifiedElement Statement {
-            get { return element; }
-        }
-        public int Next {
-            get { return number; }
+        public Node Previous{
+            get { return _previous; }
         }
     }
 }

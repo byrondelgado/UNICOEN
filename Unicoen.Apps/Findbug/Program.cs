@@ -33,8 +33,12 @@ namespace Unicoen.Apps.Findbug {
                 var csharpCodeObj = new CSharpProgramGenerator().GenerateFromFile(inputPathCs);
                 var bodyCs = csharpCodeObj.Body;
 
-                var blocks = javaCodeObj.Descendants<UnifiedBlock>();
-                CreateGraph.Graph(blocks);
+                var javaBlocks = javaCodeObj.Descendants<UnifiedBlock>();
+                var pythonBlocks = pythonCodeObj.Descendants<UnifiedBlock>();
+                var csharpBlocks = csharpCodeObj.Descendants<UnifiedBlock>();
+                CreateGraph.Graph(javaBlocks);
+                //CreateGraph.Graph(pythonBlocks);
+                //CreateGraph.Graph(csharpBlocks);
 
                 //多言語対応可能かの実験
                 /*var a = DefUseAnalyzer.FindDefines(bodyJ);
