@@ -22,6 +22,7 @@ public class GraphSample {
 			}
 		}
 		for(int i = 0; i < 20; i++){
+			a = 10;
 			b++;
 		}
 		b = null;

@@ -19,6 +19,7 @@
 using System.Linq;
 using Code2Xml.Languages.Java.CodeToXmls;
 using NUnit.Framework;
+using Unicoen.Apps.Findbug.Util;
 using Unicoen.Languages.Java.ProgramGenerators;
 using Unicoen.Model;
 

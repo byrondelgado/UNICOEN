@@ -7,13 +7,11 @@ public class NP_NULL_ON_SOME_PATH {
 
 		if(n < 10){
 			s = null;
-		}else if(n > 10){
-			s = null;
 		}else{
 			s = true;
 		}
 
-		if(s){	//NP_NULL_ON_SOME_PATH	優先度 高
+		if(s){	//NP_NULL_ON_SOME_PATH	優先度 髁E
 			System.out.println("STRING");
 		}
 	}
