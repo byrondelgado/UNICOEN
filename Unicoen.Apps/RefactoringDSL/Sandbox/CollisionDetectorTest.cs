@@ -20,9 +20,20 @@ namespace Unicoen.Apps.RefactoringDSL.Sandbox {
             _model = JavaFactory.GenerateModel(code);
 		}
 
+        [Test]
+        public void 読み込みテスト()
+        {
+            Console.WriteLine(JavaFactory.GenerateCode(_model));
+        }
 		[Test]
 		public void 関数の衝突を検知できる()
 		{
+		    var targetFunction = _model.FirstDescendant<UnifiedFunctionDefinition>().Clone() as UnifiedFunctionDefinition;
+			// Console.WriteLine(JavaFactory.GenerateCode(targetFunction));
+			foreach (var collision in CollisionDetector.FindFunctionCollision(_model, targetFunction))
+			{
+				Console.WriteLine(JavaFactory.GenerateCode(collision));
+			}
 			
 		}
 
